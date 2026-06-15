@@ -1,0 +1,104 @@
+version: '3.9'
+
+services:
+  postgresql:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: truva
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-secret}
+      POSTGRES_DB: truva
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - truva_backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truva -d truva"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - truva_backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://truva:${PG_PASSWORD:-secret}@postgresql:5432/truva
+      - REDIS_URL=redis://redis:6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
+      - EVIDENCE_BASE_PATH=/mnt/evidence
+      - MAX_SELF_CORRECTION_ITERATIONS=3
+      - PLUGIN_CONCURRENCY=3
+      - PLUGIN_TIMEOUT_SECONDS=120
+      - CONFIDENCE_THRESHOLD=0.85
+      - SANDBOX_CONTAINER=${SANDBOX_CONTAINER:-truva-ir-forensic_sandbox-1}
+      - DEBUG_LOG_PATH=/app/debug-5eb48a.log
+      - FORCE_OSS_MODEL=${FORCE_OSS_MODEL}
+      - OSS_MODEL=${OSS_MODEL}
+    volumes:
+      - ./backend:/app
+      - evidence_storage:/mnt/evidence
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    networks:
+      - truva_backend
+      - truva_frontend
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - truva_frontend
+
+  forensic_sandbox:
+    build:
+      context: ./forensic_sandbox
+    security_opt:
+      - no-new-privileges:true
+    # cap_drop: [ALL]
+    read_only: false
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    environment:
+      - HOME=/tmp
+    volumes:
+      - evidence_storage:/mnt/evidence:ro
+      - volatility_symbols:/usr/local/lib/python3.11/site-packages/volatility3/symbols
+    user: '65534:65534'
+    # Keep container alive so we can exec into it
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+volumes:
+  pgdata:
+  evidence_storage:
+  volatility_symbols:
+
+networks:
+  truva_backend:
+  truva_frontend:

@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+}
+
+@layer utilities {
+  .bg-tactical-grid {
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+  }
+  
+  .bg-tactical-grid-glow {
+    background-image: 
+      radial-gradient(circle at center, rgba(0, 102, 255, 0.2) 0%, transparent 70%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 50px 50px, 50px 50px;
+  }
+
+  .scanline {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(0, 242, 254, 0.1) 50%, 
+      transparent 100%
+    );
+    animation: scan 6s linear infinite;
+    opacity: 0.8;
+    z-index: 10;
+  }
+  
+  .glass-panel {
+    @apply bg-truva-surface/60 backdrop-blur-glass-lg border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.02)];
+  }
+
+  .glass-panel-heavy {
+    @apply bg-black/60 backdrop-blur-glass-xl border border-white/10 border-t-white/30 border-l-white/30 shadow-[0_16px_48px_rgba(0,0,0,0.9),inset_0_0_30px_rgba(0,102,255,0.1)];
+  }
+
+  .hero-text-glow {
+    text-shadow: 0 0 40px rgba(0, 102, 255, 0.8), 0 0 80px rgba(0, 242, 254, 0.4);
+  }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 102, 255, 0.4); }
+  50% { box-shadow: 0 0 50px rgba(0, 242, 254, 0.8); }
+}
