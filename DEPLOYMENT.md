@@ -67,3 +67,14 @@ To share a working deployment link with hackathon judges or remote testers witho
    docker compose restart backend
    ```
 5. **Open the ngrok link** in any browser. Vite's reverse proxy will automatically route all `/api` and `/socket.io` websocket handshakes directly to your backend container, making the app fully functional on one single tunnel link!
+
+---
+
+## 4. How to Test Uploading a File (Using Mock Sandbox)
+
+To test the full autonomous pipeline via file upload without downloading a multi-gigabyte memory image:
+
+1. **Keep Mock Sandbox Active:** Ensure `FORCE_MOCK_SANDBOX=true` is set in `.env` (enabled by default).
+2. **Create a Dummy File:** Create any small text file on your machine and rename it to `test.mem` or `dummy.raw` (a 1 KB file is sufficient).
+3. **Upload in UI:** On the TRUVA-IR landing page (`http://localhost:3000`), click the **Drag & Drop Memory Dump** area and select your dummy file.
+4. **Observe Live Analysis:** The system will upload the file, calculate its hash, launch the sandbox workspace, and automatically progress through the multi-agent pipeline (Planner -> Executor -> Verifier -> Reporter) in real-time until reaching `COMPLETED`.
